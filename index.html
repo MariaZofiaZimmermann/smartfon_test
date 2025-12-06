@@ -161,18 +161,37 @@
   });
 
   /****************************
-   * 6) Start + zapis CSV (tylko: file, response_label, correct)
+   * 6) Start + zapis CSV (movie clip, response, true/false)
    ****************************/
   jsPsych.init({
     timeline: timeline,
     on_finish: function() {
-      jsPsych.data.get()
+      // Bierzemy tylko triale z odpowiedziami
+      const trials = jsPsych.data.get()
         .filter({ trial_type: "html-button-response" })
-        .selectColumns(['file', 'response_label', 'correct'])
-        .localSave('csv', 'dane_' + participantCode + '.csv');
+        .values();
+
+      // Budujemy CSV ręcznie: nagłówek + wiersze
+      let csv = "movie_clip,response,correct\n";
+      trials.forEach(t => {
+        const clip = t.file || "";
+        const response = t.response_label || "";
+        const correct = (typeof t.correct !== "undefined") ? t.correct : "";
+        csv += [clip, response, correct].join(",") + "\n";
+      });
+
+      // Tworzymy plik i wywołujemy pobieranie
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "dane_" + participantCode + ".csv";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
     }
   });
 </script>
 </html>
-
 
