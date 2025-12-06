@@ -166,7 +166,7 @@
   jsPsych.init({
     timeline: timeline,
     on_finish: function() {
-      // Bierzemy tylko triale z odpowiedziami
+      // Trials tylko z odpowiedziami (P/F)
       const trials = jsPsych.data.get()
         .filter({ trial_type: "html-button-response" })
         .values();
@@ -194,4 +194,3 @@
   });
 </script>
 </html>
-
