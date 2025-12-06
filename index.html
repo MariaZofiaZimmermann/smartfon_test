@@ -161,17 +161,18 @@
   });
 
   /****************************
-   * 6) Start + zapis CSV (tylko: movie clip, response, correct)
+   * 6) Start + zapis CSV (tylko: file, response_label, correct)
    ****************************/
   jsPsych.init({
     timeline: timeline,
     on_finish: function() {
-      // Bierzemy tylko triale z odpowiedziami i wybieramy 3 kolumny
       jsPsych.data.get()
         .filter({ trial_type: "html-button-response" })
-        .select('file', 'response_label', 'correct')
+        .selectColumns(['file', 'response_label', 'correct'])
         .localSave('csv', 'dane_' + participantCode + '.csv');
     }
   });
 </script>
 </html>
+
+
