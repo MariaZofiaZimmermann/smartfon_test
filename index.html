@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <title>Eksperyment – 22 klipy P/F</title>
+
+  <!-- jsPsych 6.3.1 -->
+  <script src="https://cdn.jsdelivr.net/npm/jspsych@6.3.1/jspsych.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspsych@6.3.1/plugins/jspsych-html-keyboard-response.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspsych@6.3.1/plugins/jspsych-html-button-response.js"></script>
+
+  <link href="https://cdn.jsdelivr.net/npm/jspsych@6.3.1/css/jspsych.css" rel="stylesheet" />
+
+  <style>
+    body { background-color: #f5f5f5; }
+    video {
+      width: 800px;
+      max-width: 90%;
+      margin-bottom: 20px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .center { text-align: center; }
+    .big-button {
+      font-size: 24px;
+      padding: 10px 30px;
+      margin-top: 20px;
+    }
+    .name-input {
+      font-size: 24px;
+      padding: 5px 10px;
+      width: 300px;
+    }
+    .final-text {
+      font-size: 40px;
+      text-align: center;
+      margin-top: 40px;
+    }
+    .jspsych-btn {
+      font-size: 24px !important;
+      padding: 10px 25px !important;
+      margin: 0 10px !important;
+    }
+  </style>
+</head>
+<body></body>
+
+<script>
+  let participantCode = "anon";
+
+  const timeline = [];
+
+  /****************************
+   * 1) Kod osoby badanej
+   ****************************/
+  timeline.push({
+    type: 'html-keyboard-response',
+    choices: jsPsych.NO_KEYS,
+    stimulus: `
+      <div class="center">
+        <p style="font-size:26px;">Proszę wpisać <b>KOD OSOBY BADANEJ</b>:</p>
+        <input type="text" id="participantCode" class="name-input" />
+        <br><br>
+        <button id="codeButton" class="big-button">OK</button>
+      </div>
+    `,
+    on_load: function() {
+      document.getElementById('codeButton').addEventListener('click', function() {
+        const input = document.getElementById('participantCode');
+        participantCode = input.value.trim() || "anon";
+        jsPsych.finishTrial({ participant_code: participantCode });
+      });
+      document.getElementById('participantCode').focus();
+    },
+    on_finish: function(data) {
+      jsPsych.data.addProperties({ participant_code: data.participant_code });
+    }
+  });
+
+  /****************************
+   * 2) Ekran START
+   ****************************/
+  timeline.push({
+    type: 'html-keyboard-response',
+    choices: jsPsych.NO_KEYS,
+    stimulus: `
+      <div class="center">
+        <p style="font-size:28px;">Po naciśnięciu START rozpoczną się filmiki.</p>
+        <p style="font-size:22px;">Po każdym filmiku proszę kliknąć: Prawda lub Fałsz.</p>
+        <button class="big-button" onclick="jsPsych.finishTrial()">START</button>
+      </div>
+    `
+  });
+
+  /****************************
+   * 3) Wymieszana kolejność 22 klipów (1.mp4 – 22.mp4)
+   ****************************/
+  const clips = [
+    { file: "12.mp4", correct: "false" },
+    { file: "3.mp4",  correct: "true" },
+    { file: "19.mp4", correct: "true" },
+    { file: "7.mp4",  correct: "true" },
+    { file: "14.mp4", correct: "false" },
+    { file: "1.mp4",  correct: "true" },
+    { file: "21.mp4", correct: "false" },
+    { file: "5.mp4",  correct: "true" },
+    { file: "10.mp4", correct: "true" },
+    { file: "17.mp4", correct: "false" },
+    { file: "8.mp4",  correct: "true" },
+    { file: "22.mp4", correct: "false" },
+    { file: "6.mp4",  correct: "false" },
+    { file: "11.mp4", correct: "false" },
+    { file: "2.mp4",  correct: "true" },
+    { file: "15.mp4", correct: "false" },
+    { file: "9.mp4",  correct: "true" },
+    { file: "4.mp4",  correct: "true" },
+    { file: "16.mp4", correct: "false" },
+    { file: "18.mp4", correct: "false" },
+    { file: "20.mp4", correct: "true" },
+    { file: "13.mp4", correct: "false" }
+  ];
+
+  /****************************
+   * 4) Trial dla każdego klipu
+   ****************************/
+  clips.forEach((clip, idx) => {
+    timeline.push({
+      type: 'html-button-response',
+      trial_duration: null,
+      response_ends_trial: true,
+      stimulus: `
+        <div class="center">
+          <video autoplay muted playsinline>
+            <source src="${clip.file}" type="video/mp4">
+            Twoja przeglądarka nie obsługuje wideo.
+          </video>
+        </div>
+      `,
+      choices: ['Prawda', 'Fałsz'],
+      data: {
+        clip_number: idx + 1,
+        file: clip.file,
+        correct_answer: clip.correct
+      },
+      on_finish: function(data) {
+        data.response_label = data.button_pressed == 0 ? "true" : "false";
+        data.correct = (data.response_label === data.correct_answer);
+      }
+    });
+  });
+
+  /****************************
+   * 5) Ekran końcowy
+   ****************************/
+  timeline.push({
+    type: 'html-keyboard-response',
+    choices: jsPsych.NO_KEYS,
+    trial_duration: 3000,
+    stimulus: `<div class="final-text">Dziękujemy!<br>KONIEC</div>`
+  });
+
+  /****************************
+   * 6) Start + zapis CSV
+   ****************************/
+  jsPsych.init({
+    timeline: timeline,
+    on_finish: function() {
+      jsPsych.data.get().localSave('csv', 'dane_' + participantCode + '.csv');
+    }
+  });
+</script>
+</html>
