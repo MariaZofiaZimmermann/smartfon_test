@@ -161,12 +161,25 @@
   });
 
   /****************************
-   * 6) Start + zapis CSV
+   * 6) Start + zapis CSV (tylko: movie clip, response, correct)
    ****************************/
   jsPsych.init({
     timeline: timeline,
     on_finish: function() {
-      jsPsych.data.get().localSave('csv', 'dane_' + participantCode + '.csv');
+
+      // Bierzemy tylko triale z odpowiedziami (html-button-response)
+      // i redukujemy dane do: clip, response, correct
+      const minimal = jsPsych.data.get()
+        .filter({ trial_type: "html-button-response" })
+        .map(d => {
+          return {
+            clip: d.file,
+            response: d.response_label,
+            correct: d.correct
+          };
+        });
+
+      minimal.localSave('csv', 'dane_' + participantCode + '.csv');
     }
   });
 </script>
